@@ -46,11 +46,11 @@
             <div id="input-group-name">
                 <label class="block text-gray-700 text-sm font-bold mb-2">老師代號</label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                        <i class="fa-solid fa-chalkboard-user"></i>
-                    </span>
-                    <input type="text" id="teacherName" placeholder="例如：徐、陳 (無需輸入稱謂)" 
-                        class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    <select id="teacherName" class="w-full pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white">
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </div>
                 </div>
             </div>
 
@@ -241,7 +241,7 @@
             const resultTitle = document.getElementById('result-title');
             
             // Get Values
-            let targetName = document.getElementById('teacherName').value.replace("老師", "").trim();
+            let targetName = document.getElementById('teacherName').value.trim();
             const targetDay = document.getElementById('selectDay').value;
             const targetSlot = document.getElementById('selectSlot').value;
 
@@ -250,7 +250,7 @@
             
             // Validation
             if (currentMode === 'teacher' && !targetName) {
-                alert("請輸入老師代號！");
+                alert("請選擇老師代號！");
                 return;
             }
 
@@ -375,15 +375,28 @@
             return div;
         }
 
-        // Initialize
-        switchTab('teacher');
-
-        // Add Enter key listener
-        document.getElementById('teacherName').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                performSearch();
+        // Build teacher dropdown from database
+        function populateTeacherSelect() {
+            const nameSet = new Set();
+            for (const locations of Object.values(rosterDb)) {
+                for (const teacherList of Object.values(locations)) {
+                    teacherList.forEach(t => { if (t) nameSet.add(t); });
+                }
             }
-        });
+            const sorted = [...nameSet].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+            const sel = document.getElementById('teacherName');
+            sel.innerHTML = '<option value="" disabled selected>請選擇老師</option>';
+            sorted.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                sel.appendChild(opt);
+            });
+        }
+
+        // Initialize
+        populateTeacherSelect();
+        switchTab('teacher');
 
     </script>
 </body>
