@@ -45,6 +45,13 @@
             <!-- Input: Teacher Name (Only for Teacher Mode) -->
             <div id="input-group-name">
                 <label class="block text-gray-700 text-sm font-bold mb-2">老師代號</label>
+                <div class="relative mb-2">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="teacherSearch" placeholder="輸入代號搜尋，例如：徐、陳"
+                        class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                </div>
                 <div class="relative">
                     <select id="teacherName" class="w-full pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white">
                     </select>
@@ -375,28 +382,50 @@
             return div;
         }
 
-        // Build teacher dropdown from database
-        function populateTeacherSelect() {
+        // Build teacher list from database
+        let allTeachers = [];
+        function initTeacherList() {
             const nameSet = new Set();
             for (const locations of Object.values(rosterDb)) {
                 for (const teacherList of Object.values(locations)) {
                     teacherList.forEach(t => { if (t) nameSet.add(t); });
                 }
             }
-            const sorted = [...nameSet].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+            allTeachers = [...nameSet].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+        }
+
+        function populateTeacherSelect(filter = '') {
             const sel = document.getElementById('teacherName');
-            sel.innerHTML = '<option value="" disabled selected>請選擇老師</option>';
-            sorted.forEach(name => {
+            const filtered = filter ? allTeachers.filter(t => t.includes(filter)) : allTeachers;
+            sel.innerHTML = '';
+            if (filtered.length === 0) {
+                sel.innerHTML = '<option value="" disabled selected>找不到符合的老師</option>';
+                return;
+            }
+            const current = sel.value;
+            if (!filter) {
+                sel.innerHTML = '<option value="" disabled selected>請選擇老師</option>';
+            }
+            filtered.forEach(name => {
                 const opt = document.createElement('option');
                 opt.value = name;
                 opt.textContent = name;
                 sel.appendChild(opt);
             });
+            if (filter && filtered.length > 0) {
+                sel.value = filtered[0];
+            }
         }
 
         // Initialize
+        initTeacherList();
         populateTeacherSelect();
         switchTab('teacher');
+
+        // Search input listener
+        document.getElementById('teacherSearch').addEventListener('input', function() {
+            populateTeacherSelect(this.value.trim());
+        });
 
     </script>
 </body>
